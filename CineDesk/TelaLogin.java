@@ -14,6 +14,7 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.io.IOException;
 import java.util.Arrays;
 
 public class TelaLogin extends JFrame {
@@ -22,6 +23,7 @@ public class TelaLogin extends JFrame {
     private final JPasswordField txtSenha = new JPasswordField(20);
     private final JButton btnLogin = new JButton("Login");
     private final JButton btnCadastro = new JButton("Cadastro");
+    private final UsuarioDAO usuarioDAO = new UsuarioDAO();
 
     public TelaLogin() {
         setTitle("CineDesk - Login");
@@ -90,12 +92,18 @@ public class TelaLogin extends JFrame {
             return;
         }
 
-        String senhaCadastrada = TelaCadastro.usuarios.get(usuario);
-        boolean valido = senhaCadastrada != null && Arrays.equals(senha, senhaCadastrada.toCharArray());
-        Arrays.fill(senha, '\0');
+        Usuario autenticado;
+        try {
+            autenticado = usuarioDAO.autenticar(usuario, senha);
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(this, "Erro ao ler os usuários cadastrados.", "Erro", JOptionPane.ERROR_MESSAGE);
+            return;
+        } finally {
+            Arrays.fill(senha, '\0');
+        }
 
-        if (valido) {
-            JOptionPane.showMessageDialog(this, "Login realizado com sucesso! Bem-vindo, " + usuario + ".");
+        if (autenticado != null) {
+            JOptionPane.showMessageDialog(this, "Login realizado com sucesso! Bem-vindo, " + autenticado.getNome() + ".");
         } else {
             JOptionPane.showMessageDialog(this, "Usuário ou senha inválidos.", "Erro", JOptionPane.ERROR_MESSAGE);
             txtSenha.setText("");

@@ -15,13 +15,10 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 public class TelaCadastro extends JFrame {
 
-    // Armazena usuários em memória (usuario -> senha)
-    static final Map<String, String> usuarios = new HashMap<>();
+    private final UsuarioDAO usuarioDAO = new UsuarioDAO();
 
     private final JTextField txtNome = new JTextField(20);
     private final JTextField txtUsuario = new JTextField(20);
@@ -101,14 +98,29 @@ public class TelaCadastro extends JFrame {
             JOptionPane.showMessageDialog(this, "As senhas não coincidem.", "Erro", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        if (usuarios.containsKey(usuario)) {
-            JOptionPane.showMessageDialog(this, "Usuário já cadastrado.", "Erro", JOptionPane.ERROR_MESSAGE);
+        if (usuario.contains(" ")) {
+            JOptionPane.showMessageDialog(this, "O usuário não pode conter espaços.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        if (senha.length < 4) {
+            JOptionPane.showMessageDialog(this, "A senha deve ter pelo menos 4 caracteres.", "Aviso", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        usuarios.put(usuario, new String(senha));
+        UsuarioDAO.ResultadoCadastro resultado = usuarioDAO.cadastrar(nome, usuario, senha);
         Arrays.fill(senha, '\0');
         Arrays.fill(confirmar, '\0');
+
+        switch (resultado) {
+            case USUARIO_JA_EXISTE:
+                JOptionPane.showMessageDialog(this, "Usuário já cadastrado.", "Erro", JOptionPane.ERROR_MESSAGE);
+                return;
+            case ERRO:
+                JOptionPane.showMessageDialog(this, "Erro ao salvar o cadastro.", "Erro", JOptionPane.ERROR_MESSAGE);
+                return;
+            default:
+                break;
+        }
 
         JOptionPane.showMessageDialog(this, "Usuário " + nome + " cadastrado com sucesso!");
         limparCampos();
